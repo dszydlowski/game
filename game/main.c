@@ -93,7 +93,7 @@ void ClearArea (void)
 void SetColumnAsBlinking(int column)
 {
   int i = 0;
-  for (i = 0; i < 7; i++)
+  for (i = 0; i < 6; i++)
   {
     if (board[column][i] == 0)
     {
@@ -265,126 +265,6 @@ int Analize(void)
   return gameFinished;
 }
 
-typedef enum{
-  LEFT_UP,
-  UP,
-  RIGHT_UP,
-  RIGHT,
-} E_Direction;
-
-/*
- struktura linia:
- - ile pol w lini
- - kierunek
- - pole lewe ile brakuje do obstawienia pola: 0 - gotowe do obstawienia, -1 - zablokowane
- - pole prawe/gora ile brakuje do obstawienia
- - pole lewe kolumna (-1 = zablokowane)
- - pole prawe kolumna (-1 = zablokowane)
- */
-
-typedef struct{
-  int row;
-  int col;
-  int pawnsNumber;
-  E_Direction direction;
-  int leftSide;
-  int rightSide;
-  int leftCol;
-  int rightCol;
-}T_Line;
-
-void searchLines (Pawns player)
-{
-  int row, col, i;
-  T_Line * newLine = NULL;
-  
-  for (row = 0; row < 6; row ++)
-  {
-    for (col = 0; col < 7; col++)
-    {
-      if (board[col][row] == player)
-      {
-        /* LEFT - UP check for next pawn in line */
-        if (col -1 >= 0 && row+1 < 6 && board[col-1][row+1] == player)
-        {
-          /* next pawn in line found, now check if current pawn is first in line */
-          if (col +1 < 7 && row-1 > 0 && board[col+1][row-1] != player)
-          {
-            /* new line found, create object for it */
-            newLine = (T_Line*) malloc(sizeof (T_Line));
-            newLine->col = col;
-            newLine->row = row;
-            newLine->direction = LEFT_UP;
-            newLine->pawnsNumber = 2;
-            
-            /* Check if field before is available */
-            
-            
-            for (i = 2; i < 6; i++)
-            {
-              if (col -i < 0 || row+i > 6 )
-              {
-                /* board border reached - line locked on this side */
-                newLine->leftSide = -1;
-                newLine->leftCol = -1;
-                break;
-              }
-              else if (board [col -i][row+i] != player && board [col -i][row+i] != empty)
-              {
-                /* field on board has been taken by enemy - line locked on this side */
-                newLine->leftCol = col-i;
-                newLine->leftSide = -1;
-                break;
-              }
-              else if (board[col-2][row+2] == player)
-              {
-                /* next pawn has been found */
-                newLine->pawnsNumber++;
-              }
-              else if (board [col -i][row+i] == empty)
-              {
-                newLine->
-              }
-            }
-            
-          }
-          else
-          {
-            /* This pawn is in the middle of another line - new line not created */
-          }
-        }
-        
-        
-        
-        
-      }
-    }
-  }
-}
-
-
-char algorithm(void)
-{
-  /* szukanie lini przeciwnika */
-  /* szukanie wlasnych linii */
-  /* Szukazanie zakazanych kolumn - czyli takich które po wrzuceniu do nich pionka, pozwolą przeciwnikowi rozbudować linię*/
-  /* Analiza lini
-      - szukanie wlasnej lini z trzema pionkami i czwartym gotowym do obstawienia - priorytet 0
-      - linia przeciwnika z trzema polami i oba czwarte pola są gotowe do obstawienia -
-        sytuacja przegrana poleganie na bledzie przeciwnika - priorytet 1
-      - linia przeciwnika z trzema pionkami i jednym czwartym polem gotowym do obstawienia - priorytet 2
-      - szukanie linii przeciwnika z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 3
-      - szukanie wlasnej linii z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 4
-      - szukanie wlasnej lini z trzema pionkami z polami 4 nie gotowymi do obstawienia - priorytet 5
-      - szukanie wlasnej lini z dwoma pionkami z polami 3 niegotowymi do obstawienia - p 6
-      - przy braku linii szukanie wspolnego miejsca miedzy pojedynczymi pionkami niekoniecznie przylegajacym do już
-        postawionych pionków ale w miejscach gdzie potencjalne linie mogą się krzyzowac
-   */
-
-  
-  return 'q';
-}
-
 int main()
 {
   Pawns player = X;
@@ -407,7 +287,7 @@ int main()
     
     if (numberOfPlayers == 1 && player == O)
     {
-      command = algorithm();
+      command = 'q';//algorithm();
     }
     else if (numberOfPlayers == 2)
     {
@@ -441,7 +321,12 @@ int main()
         if (Analize() == 1)
         {
           DrawBoard();
-          printf("gra skonczona! [r]estart [q]uit\n");
+          printf("gra skonczona! Zwyciezyl gracz ");
+          if (player == X)
+            printf ("\e[32mX\x1b[0m\n");
+          else
+            printf ("\x1b[31mO\x1b[0m\n");
+          printf ("[r]estart [q]uit\n");
           gameFinished = 1;
           continue;
         }
@@ -468,7 +353,7 @@ int main()
     }
     else if (command == 'q' || command == 'Q')
     {
-      printf ("Gra zakonczona!\n");
+      //printf ("Gra przerwana!\n");
       break;
     }
     else if (command == 'r' || command == 'R')
@@ -477,6 +362,7 @@ int main()
       DrawBoard();
       gameFinished = 0;
       numberOfPlayers = 0;
+      player = X;
     }
   }
   return 0;
