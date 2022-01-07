@@ -22,7 +22,16 @@ typedef enum{
   Oblink
 }Pawns;
 
-static Pawns board[7][6];
+static Pawns board[7][6] =
+{
+  {O, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {X, X, empty, empty, empty, empty},
+  {X, X, X, empty, empty, empty},
+  {O, X, O, empty, empty, empty},
+  {O, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+};
 /*
  struktura linia:
  - ile pol w lini
@@ -46,6 +55,29 @@ typedef struct{
   int leftEmptyFieldsBelow;
   int rightEmptyFieldsBelow;
 }T_Line;
+
+void PrintLine (T_Line * line)
+{
+  printf ("col:%d, row:%d, pawns:%d direction: ", line->col, line->row, line->pawnsNumber);
+  switch (line->direction)
+  {
+    case LEFT_UP:
+      printf ("LEFT_UP ");
+      break;
+    case UP:
+      printf ("UP ");
+      break;
+    case RIGHT_UP:
+      printf("RIGHT_UP ");
+      break;
+    case RIGHT:
+      printf("RIGHT ");
+      break;
+  }
+  printf ("beforeBegin %d, beginEmptyFieldsBelow %d, endColumn %d, endEmptyFieldsBelow %d\n",
+          line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow);
+  
+}
 
 /* Function draws whole board according to pawns values on each field. */
 void DrawBoard(void)
@@ -124,7 +156,7 @@ int SearchFieldsBelow(int column, int row)
  */
 int FieldState(int col, int row, Pawns player)
 {
-  if (col < 0 || row > 6 )  // rozbudowac!!!
+  if (col < 0 || col >=7 || row >= 6 || row < 0 )
   {
     /* board border reached - line locked on this side */
     return -1;
@@ -148,10 +180,10 @@ int FieldState(int col, int row, Pawns player)
 
 /* This function checks filed before the line if it is already taken by enemy, or doesn't exists.
     NewLine instance is completed accordingly*/
-void CheckPawnBefore(T_Line* newLine, int col, int row)
+void CheckPawnBefore(T_Line* newLine, int col, int row, Pawns player)
 {
   /*  TODO: line below can be removed if fldState will be get as an argument */
-  int fldState = FieldState(col, row, board[newLine->col][newLine->row]);
+  int fldState = FieldState(col, row, player);
   
   if (-1 == fldState)
   {
@@ -171,14 +203,17 @@ void CheckPawnBefore(T_Line* newLine, int col, int row)
 void SearchForNextPawnsInLine(T_Line* newLine, int colAdd, int rowAdd)
 {
   int fldState;
-  int i = colAdd;
-  int j = rowAdd;
-  for (; i < 4; i+=colAdd, j+=rowAdd)
+  int c = colAdd;
+  int r = rowAdd;
+  for (; c < 4; c+=colAdd, r+=rowAdd)
   {
-    fldState = FieldState(newLine->col+i, newLine->row+j, board[newLine->col][newLine->row]);
+    fldState = FieldState(newLine->col+c, newLine->row+r, board[newLine->col][newLine->row]);
     if (fldState == -1)
     {
       /* linia zablokowana */
+      newLine->leftCol = -1;
+      newLine->leftSide = -1;
+      newLine->leftEmptyFieldsBelow = -1;
       break;
     }
     else if (fldState == 1)
@@ -187,8 +222,9 @@ void SearchForNextPawnsInLine(T_Line* newLine, int colAdd, int rowAdd)
     }
     else /* if fldState == 0 */
     {
-      newLine->leftCol = newLine->col+i;
-      newLine->leftEmptyFieldsBelow = SearchFieldsBelow(newLine->col+i, newLine->row+j);
+      newLine->leftCol = newLine->col+c;
+      newLine->leftEmptyFieldsBelow = SearchFieldsBelow(newLine->col+c, newLine->row+r);
+      break;
     }
   }
   return;
@@ -205,6 +241,7 @@ T_Line* LineInit(int col, int row, E_Direction dir )
   newLine->leftEmptyFieldsBelow = 0;
   return newLine;
 }
+
 
 void searchLines (Pawns player)
 {
@@ -227,16 +264,74 @@ void searchLines (Pawns player)
           {
             /* new line found, create object for it */
             newLine = LineInit(col, row, LEFT_UP);
-            CheckPawnBefore(newLine, col+1, row-1);
+            CheckPawnBefore(newLine, col+1, row-1, player);
             SearchForNextPawnsInLine(newLine, -1, +1);
+            /* add new line to list */
+            PrintLine(newLine);
+            free(newLine);
           }
           else
           {
-            /* This pawn is in the middle of another line - new line not created */
+            /* This pawn is in the middle of another LEFT UP line - new line not created */
           }
         }
         
+        /* UP check for next pawn in line */
+        if (row+1 < 6 && board [col][row+1] == player)
+        {
+          fldState = FieldState(col, row-1, player);
+          if (fldState != 1)
+          {
+            newLine = LineInit(col, row, UP);
+            CheckPawnBefore(newLine, col, row-1, player);
+            SearchForNextPawnsInLine(newLine, 0, +1);
+            /* add new line to list */
+            PrintLine(newLine);
+            free(newLine);
+          }
+          else
+          {
+            /* This pawn is in the middle of another UP line - new line not created */
+          }
+        }
         
+        /* RIGHT UP */
+        if (col+1 < 7 && row+1 < 6 && board[col+1][row+1] == player)
+        {
+          fldState=FieldState(col-1, row-1, player);
+          if (fldState != 1)
+          {
+            newLine = LineInit(col, row, RIGHT_UP);
+            CheckPawnBefore(newLine, col-1, row-1, player);
+            SearchForNextPawnsInLine(newLine, +1, +1);
+            /* add new line to list */
+            PrintLine(newLine);
+            free(newLine);
+          }
+          else
+          {
+            /* this field is a part of another RIGHT UP line - no new line craeted */
+          }
+        }
+        
+        /* RIGHT */
+        if (col+1 < 7 && board[col+1][row] == player)
+        {
+          fldState = FieldState(col-1, row, player);
+          if (fldState != 1)
+          {
+            newLine = LineInit(col, row, RIGHT);
+            CheckPawnBefore(newLine, col-1, row, player);
+            SearchForNextPawnsInLine(newLine, +1, 0);
+            /* add newLine to list */
+            PrintLine(newLine);
+            free(newLine);
+          }
+        }
+        else
+        {
+          /* this field is a part of another RIGHT line  */
+        }
         
         
       }
@@ -269,5 +364,6 @@ char algorithm(void)
 
 int main ()
 {
+  DrawBoard();
   searchLines(X);
 }
