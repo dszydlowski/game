@@ -22,12 +22,13 @@ typedef enum{
   Oblink
 }Pawns;
 
+
 static Pawns board[7][6] =
 {
-  {O, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
-  {X, X, empty, empty, empty, empty},
-  {X, X, X, empty, empty, empty},
+  {X, X, X, O, empty, empty},
+  {X, O, X, X, empty, empty},
+  {X, O, empty, empty, empty, empty},
+  {X, O, X, empty, empty, empty},
   {O, X, O, empty, empty, empty},
   {O, empty, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
@@ -55,6 +56,119 @@ typedef struct{
   int leftEmptyFieldsBelow;
   int rightEmptyFieldsBelow;
 }T_Line;
+/* ==================================== LIST ==========================================*/
+struct List
+{
+  int index;
+  struct List * Next;
+  T_Line* Line;
+};
+typedef struct List T_List;
+
+static T_List* Lines;
+
+T_List* ListInit(void)
+{
+  T_List* new = (T_List*) malloc(sizeof(T_List));
+  new->Next = NULL;
+  new->Line = NULL;
+  new->index = 0;
+  return new;
+}
+
+void ListAdd (T_List* ptrList, T_Line* newItem)
+{
+  T_List* current = ptrList;
+  if (newItem == NULL || ptrList == NULL)
+  {
+    printf ("ListAdd: Problem with empty pointer\n");
+    exit(1);
+  }
+  
+  while (current->Line != NULL)
+  {
+    current = current->Next;
+  }
+  current->Line = newItem;
+  current->Next = (T_List*) malloc (sizeof(T_List));
+  current->Next->Next = NULL;
+  current->Next->Line = NULL;
+  current->Next->index = current->index +1;
+  return;
+}
+
+void ListRemove (T_List* ptrList, int index)
+{
+  T_List* current = ptrList;
+  T_List* tmpNext = NULL;
+  if (ptrList == NULL)
+  {
+    printf ("ListRemove: Problem with empty pointer\n");
+    exit(1);
+  }
+  
+  while (current->index != index)
+  {
+    current = current->Next;
+  }
+  free(current->Line);
+  if (current->Next != NULL)
+  {
+    current->Line = current->Next->Line;
+    tmpNext = current->Next->Next;
+    free(current->Next);
+    current->Next = tmpNext;
+    /* updating indexes */
+    current = current->Next;
+    while (current == NULL)
+    {
+      current->index--;
+      current = current->Next;
+    }
+    
+  }
+  else
+  {
+    current->Line = NULL;
+  }
+}
+
+T_List* ListLine (T_List* ptrList, int index)
+{
+  T_List* current = ptrList;
+  if (ptrList == NULL)
+  {
+    printf ("ListRemove: Problem with empty pointer\n");
+    exit(1);
+  }
+  
+  while (current != NULL && current->index != index)
+  {
+    current = current->Next;
+  }
+  return current;
+}
+
+void ListFree(T_List* ptrList)
+{
+  T_List* current = ptrList;
+  T_List* next = NULL;
+  if (ptrList == NULL)
+  {
+    printf ("ListRemove: Problem with empty pointer\n");
+    exit(1);
+  }
+  
+  while(current != NULL)
+  {
+    next = current->Next;
+    free(current->Line);
+    free(current);
+    current = next;
+  }
+}
+
+/* ==================================== LIST ==========================================*/
 
 void PrintLine (T_Line * line)
 {
@@ -78,6 +192,7 @@ void PrintLine (T_Line * line)
           line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow);
   
 }
+
 
 /* Function draws whole board according to pawns values on each field. */
 void DrawBoard(void)
@@ -243,7 +358,7 @@ T_Line* LineInit(int col, int row, E_Direction dir )
 }
 
 
-void searchLines (Pawns player)
+void SearchLines (T_List* Lines, Pawns player)
 {
   int row, col;
   int fldState = 0;
@@ -267,8 +382,8 @@ void searchLines (Pawns player)
             CheckPawnBefore(newLine, col+1, row-1, player);
             SearchForNextPawnsInLine(newLine, -1, +1);
             /* add new line to list */
+            ListAdd(Lines, newLine);
             PrintLine(newLine);
-            free(newLine);
           }
           else
           {
@@ -286,8 +401,8 @@ void searchLines (Pawns player)
             CheckPawnBefore(newLine, col, row-1, player);
             SearchForNextPawnsInLine(newLine, 0, +1);
             /* add new line to list */
+            ListAdd(Lines, newLine);
             PrintLine(newLine);
-            free(newLine);
           }
           else
           {
@@ -305,8 +420,8 @@ void searchLines (Pawns player)
             CheckPawnBefore(newLine, col-1, row-1, player);
             SearchForNextPawnsInLine(newLine, +1, +1);
             /* add new line to list */
+            ListAdd(Lines, newLine);
             PrintLine(newLine);
-            free(newLine);
           }
           else
           {
@@ -324,8 +439,8 @@ void searchLines (Pawns player)
             CheckPawnBefore(newLine, col-1, row, player);
             SearchForNextPawnsInLine(newLine, +1, 0);
             /* add newLine to list */
+            ListAdd(Lines, newLine);
             PrintLine(newLine);
-            free(newLine);
           }
         }
         else
@@ -342,8 +457,28 @@ void searchLines (Pawns player)
 
 char algorithm(void)
 {
+  T_List * current;
+  T_List* enemyLines = ListInit();
+  T_List* myLines = ListInit();
   /* szukanie lini przeciwnika */
+  SearchLines(enemyLines, X);
   /* szukanie wlasnych linii */
+  SearchLines(myLines, O);
+  
+  current = enemyLines;
+  printf ("Enemy Lines:\n");
+  while (current->Next != NULL)
+  {
+    PrintLine(current->Line);
+  }
+  
+  printf ("My Lines:\n");
+  current = myLines;
+  while (current->Next != NULL)
+  {
+    PrintLine(current->Line);
+  }
+  
   /* Szukazanie zakazanych kolumn - czyli takich które po wrzuceniu do nich pionka, pozwolą przeciwnikowi rozbudować linię*/
   /* Analiza lini
       - szukanie wlasnej lini z trzema pionkami i czwartym gotowym do obstawienia - priorytet 0
@@ -358,12 +493,13 @@ char algorithm(void)
         postawionych pionków ale w miejscach gdzie potencjalne linie mogą się krzyzowac
    */
 
-  
+  ListFree(enemyLines);
+  ListFree(myLines);
   return 'q';
 }
 
 int main ()
 {
   DrawBoard();
-  searchLines(X);
+  algorithm();
 }
