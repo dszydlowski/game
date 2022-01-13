@@ -48,6 +48,7 @@ typedef struct{
   int col;
   int pawnsNumber;
   E_Direction direction;
+  /* sides not used - probably to be removed */
   int leftSide;
   int rightSide;
   int leftCol;
@@ -55,6 +56,8 @@ typedef struct{
   /* fields below are empty */
   int leftEmptyFieldsBelow;
   int rightEmptyFieldsBelow;
+  /* priority will be set during analysis, -1 = not set */
+  int priority;
 }T_Line;
 /* ==================================== LIST ==========================================*/
 struct List
@@ -64,8 +67,6 @@ struct List
   T_Line* Line;
 };
 typedef struct List T_List;
-
-static T_List* Lines;
 
 T_List* ListInit(void)
 {
@@ -133,7 +134,7 @@ void ListRemove (T_List* ptrList, int index)
   }
 }
 
-T_List* ListLine (T_List* ptrList, int index)
+T_Line* ListLine (T_List* ptrList, int index)
 {
   T_List* current = ptrList;
   if (ptrList == NULL)
@@ -146,7 +147,7 @@ T_List* ListLine (T_List* ptrList, int index)
   {
     current = current->Next;
   }
-  return current;
+  return current->Line;
 }
 
 void ListFree(T_List* ptrList)
@@ -354,6 +355,7 @@ T_Line* LineInit(int col, int row, E_Direction dir )
   newLine->pawnsNumber = 1;
   newLine->rightEmptyFieldsBelow = 0;
   newLine->leftEmptyFieldsBelow = 0;
+  newLine->priority = -1;
   return newLine;
 }
 
@@ -383,7 +385,6 @@ void SearchLines (T_List* Lines, Pawns player)
             SearchForNextPawnsInLine(newLine, -1, +1);
             /* add new line to list */
             ListAdd(Lines, newLine);
-            PrintLine(newLine);
           }
           else
           {
@@ -402,7 +403,6 @@ void SearchLines (T_List* Lines, Pawns player)
             SearchForNextPawnsInLine(newLine, 0, +1);
             /* add new line to list */
             ListAdd(Lines, newLine);
-            PrintLine(newLine);
           }
           else
           {
@@ -421,7 +421,6 @@ void SearchLines (T_List* Lines, Pawns player)
             SearchForNextPawnsInLine(newLine, +1, +1);
             /* add new line to list */
             ListAdd(Lines, newLine);
-            PrintLine(newLine);
           }
           else
           {
@@ -440,7 +439,6 @@ void SearchLines (T_List* Lines, Pawns player)
             SearchForNextPawnsInLine(newLine, +1, 0);
             /* add newLine to list */
             ListAdd(Lines, newLine);
-            PrintLine(newLine);
           }
         }
         else
@@ -454,44 +452,101 @@ void SearchLines (T_List* Lines, Pawns player)
   }
 }
 
+int PriorityCheck(T_Line* line, int isMyList)
+{
+  /* Szukazanie zakazanych kolumn - czyli takich które po wrzuceniu do nich pionka, pozwolą przeciwnikowi rozbudować linię*/
+  //      - przy braku linii szukanie wspolnego miejsca miedzy pojedynczymi pionkami niekoniecznie przylegajacym do już
+  //        postawionych pionków ale w miejscach gdzie potencjalne linie mogą się krzyzowac
+  if (line == NULL)
+  {
+    return 0;
+  }
+//      - szukanie wlasnej lini z trzema pionkami i czwartym gotowym do obstawienia - priorytet 0
+  else if (line->pawnsNumber == 3 && isMyList != 0 && (line->leftEmptyFieldsBelow == 0 || line->rightEmptyFieldsBelow == 0))
+  {
+    line->priority = 0;
+  }
+//      - linia przeciwnika z trzema polami i oba czwarte pola są gotowe do obstawienia - sytuacja przegrana poleganie na bledzie przeciwnika - priorytet 1
+  else if (isMyList == 0 && line->pawnsNumber == 3 && (line->leftEmptyFieldsBelow == 0 && line->rightEmptyFieldsBelow == 0) )
+  {
+    line->priority = 1;
+  }
+//      - linia przeciwnika z trzema pionkami i jednym czwartym polem gotowym do obstawienia - priorytet 2
+  else if (isMyList == 0 && line->pawnsNumber == 3 && (line->leftEmptyFieldsBelow == 0 ^ line->rightEmptyFieldsBelow == 0))
+  {
+    line->priority = 2;
+  }
+//      - szukanie linii przeciwnika z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 3
+  else if (isMyList == 0 && line->pawnsNumber == 2 && (line->leftEmptyFieldsBelow == 0 || line->rightEmptyFieldsBelow == 0))
+  {
+    line->priority = 3;
+  }
+//      - szukanie wlasnej linii z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 4
+  else if (isMyList != 0 && line->pawnsNumber == 2 && line->leftEmptyFieldsBelow == 0 && line->rightEmptyFieldsBelow == 0)
+  {
+    line->priority = 4;
+  }
+//      - szukanie wlasnej lini z trzema pionkami z polami 4 nie gotowymi do obstawienia - priorytet 5
+  else if (isMyList != 0 && line->pawnsNumber == 3 && (line->leftEmptyFieldsBelow > 0 || line->rightEmptyFieldsBelow > 0))
+  {
+    line->priority = 5;
+  }
+//      - szukanie wlasnej lini z dwoma pionkami z polami 3 niegotowymi do obstawienia - p 6
+  else if (isMyList != 0 && line->pawnsNumber == 2 && (line->leftEmptyFieldsBelow > 0 || line->rightEmptyFieldsBelow > 0))
+  {
+    line->priority = 6;
+  }
+  return line->priority;
+}
+
+
+/* function checks for  */
+int Rating (T_List* Lines)
+{
+  int index;
+  T_Line* current;
+  
+  for (index = 0; 1; index++)
+  {
+    current = ListLine(Lines, index);
+    if (current == NULL)
+      break;
+    PrintLine(current);
+  }
+  
+  return index;
+}
 
 char algorithm(void)
 {
-  T_List * current;
+  T_Line * current;
   T_List* enemyLines = ListInit();
   T_List* myLines = ListInit();
+  int i = 0;
   /* szukanie lini przeciwnika */
   SearchLines(enemyLines, X);
   /* szukanie wlasnych linii */
   SearchLines(myLines, O);
   
-  current = enemyLines;
   printf ("Enemy Lines:\n");
-  while (current->Next != NULL)
+  for (i = 0; 1; i++)
   {
-    PrintLine(current->Line);
+    current = ListLine(enemyLines, i);
+    if (current == NULL)
+      break;
+    PrintLine(current);
   }
   
   printf ("My Lines:\n");
-  current = myLines;
-  while (current->Next != NULL)
+  for (i = 0; 1; i++)
   {
-    PrintLine(current->Line);
+    current = ListLine(myLines, i);
+    if (current == NULL)
+      break;
+    PrintLine(current);
   }
   
-  /* Szukazanie zakazanych kolumn - czyli takich które po wrzuceniu do nich pionka, pozwolą przeciwnikowi rozbudować linię*/
-  /* Analiza lini
-      - szukanie wlasnej lini z trzema pionkami i czwartym gotowym do obstawienia - priorytet 0
-      - linia przeciwnika z trzema polami i oba czwarte pola są gotowe do obstawienia -
-        sytuacja przegrana poleganie na bledzie przeciwnika - priorytet 1
-      - linia przeciwnika z trzema pionkami i jednym czwartym polem gotowym do obstawienia - priorytet 2
-      - szukanie linii przeciwnika z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 3
-      - szukanie wlasnej linii z dwoma pionkami i polami 3 gotowymi do obstawienia - priorytet 4
-      - szukanie wlasnej lini z trzema pionkami z polami 4 nie gotowymi do obstawienia - priorytet 5
-      - szukanie wlasnej lini z dwoma pionkami z polami 3 niegotowymi do obstawienia - p 6
-      - przy braku linii szukanie wspolnego miejsca miedzy pojedynczymi pionkami niekoniecznie przylegajacym do już
-        postawionych pionków ale w miejscach gdzie potencjalne linie mogą się krzyzowac
-   */
+
 
   ListFree(enemyLines);
   ListFree(myLines);
