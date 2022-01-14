@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		FD64822F2785FB6500A9F8E3 /* algorithm.c in Sources */ = {isa = PBXBuildFile; fileRef = FD64822E2785FB6300A9F8E3 /* algorithm.c */; };
 		FD7C5C0D26C7E06D0009A9BB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = FD7C5C0C26C7E06D0009A9BB /* main.c */; };
+		FD7EB9CB2791F9CE00070CB4 /* board.c in Sources */ = {isa = PBXBuildFile; fileRef = FD7EB9CA2791F9CE00070CB4 /* board.c */; };
+		FD7EB9CE279202E700070CB4 /* list.c in Sources */ = {isa = PBXBuildFile; fileRef = FD7EB9CD279202E700070CB4 /* list.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +30,10 @@
 		FD64822E2785FB6300A9F8E3 /* algorithm.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = algorithm.c; sourceTree = "<group>"; };
 		FD7C5C0926C7E06D0009A9BB /* game */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = game; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD7C5C0C26C7E06D0009A9BB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		FD7EB9C92791F9CE00070CB4 /* board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = board.h; sourceTree = "<group>"; };
+		FD7EB9CA2791F9CE00070CB4 /* board.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = board.c; sourceTree = "<group>"; };
+		FD7EB9CC279202E600070CB4 /* list.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list.h; sourceTree = "<group>"; };
+		FD7EB9CD279202E700070CB4 /* list.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = list.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,9 +66,13 @@
 		FD7C5C0B26C7E06D0009A9BB /* game */ = {
 			isa = PBXGroup;
 			children = (
+				FD7EB9C92791F9CE00070CB4 /* board.h */,
+				FD7EB9CA2791F9CE00070CB4 /* board.c */,
 				FD7C5C0C26C7E06D0009A9BB /* main.c */,
 				FD64822D2785FB3500A9F8E3 /* algorithm.h */,
 				FD64822E2785FB6300A9F8E3 /* algorithm.c */,
+				FD7EB9CC279202E600070CB4 /* list.h */,
+				FD7EB9CD279202E700070CB4 /* list.c */,
 			);
 			path = game;
 			sourceTree = "<group>";
@@ -123,8 +133,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD7EB9CB2791F9CE00070CB4 /* board.c in Sources */,
 				FD7C5C0D26C7E06D0009A9BB /* main.c in Sources */,
 				FD64822F2785FB6500A9F8E3 /* algorithm.c in Sources */,
+				FD7EB9CE279202E700070CB4 /* list.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

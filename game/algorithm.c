@@ -7,6 +7,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "board.h"
+#include "list.h"
+
+
 typedef enum{
   LEFT_UP,
   UP,
@@ -14,25 +18,7 @@ typedef enum{
   RIGHT,
 } E_Direction;
 
-typedef enum{
-  empty = 0,
-  X,
-  O,
-  Xblink,
-  Oblink
-}Pawns;
 
-
-static Pawns board[7][6] =
-{
-  {X, X, X, O, empty, empty},
-  {X, O, X, X, empty, empty},
-  {X, O, empty, empty, empty, empty},
-  {X, O, X, empty, empty, empty},
-  {O, X, O, empty, empty, empty},
-  {O, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
-};
 /*
  struktura linia:
  - ile pol w lini
@@ -59,117 +45,6 @@ typedef struct{
   /* priority will be set during analysis, -1 = not set */
   int priority;
 }T_Line;
-/* ==================================== LIST ==========================================*/
-struct List
-{
-  int index;
-  struct List * Next;
-  T_Line* Line;
-};
-typedef struct List T_List;
-
-T_List* ListInit(void)
-{
-  T_List* new = (T_List*) malloc(sizeof(T_List));
-  new->Next = NULL;
-  new->Line = NULL;
-  new->index = 0;
-  return new;
-}
-
-void ListAdd (T_List* ptrList, T_Line* newItem)
-{
-  T_List* current = ptrList;
-  if (newItem == NULL || ptrList == NULL)
-  {
-    printf ("ListAdd: Problem with empty pointer\n");
-    exit(1);
-  }
-  
-  while (current->Line != NULL)
-  {
-    current = current->Next;
-  }
-  current->Line = newItem;
-  current->Next = (T_List*) malloc (sizeof(T_List));
-  current->Next->Next = NULL;
-  current->Next->Line = NULL;
-  current->Next->index = current->index +1;
-  return;
-}
-
-void ListRemove (T_List* ptrList, int index)
-{
-  T_List* current = ptrList;
-  T_List* tmpNext = NULL;
-  if (ptrList == NULL)
-  {
-    printf ("ListRemove: Problem with empty pointer\n");
-    exit(1);
-  }
-  
-  while (current->index != index)
-  {
-    current = current->Next;
-  }
-  free(current->Line);
-  if (current->Next != NULL)
-  {
-    current->Line = current->Next->Line;
-    tmpNext = current->Next->Next;
-    free(current->Next);
-    current->Next = tmpNext;
-    /* updating indexes */
-    current = current->Next;
-    while (current == NULL)
-    {
-      current->index--;
-      current = current->Next;
-    }
-    
-  }
-  else
-  {
-    current->Line = NULL;
-  }
-}
-
-T_Line* ListLine (T_List* ptrList, int index)
-{
-  T_List* current = ptrList;
-  if (ptrList == NULL)
-  {
-    printf ("ListRemove: Problem with empty pointer\n");
-    exit(1);
-  }
-  
-  while (current != NULL && current->index != index)
-  {
-    current = current->Next;
-  }
-  return current->Line;
-}
-
-void ListFree(T_List* ptrList)
-{
-  T_List* current = ptrList;
-  T_List* next = NULL;
-  if (ptrList == NULL)
-  {
-    printf ("ListRemove: Problem with empty pointer\n");
-    exit(1);
-  }
-  
-  while(current != NULL)
-  {
-    next = current->Next;
-    free(current->Line);
-    free(current);
-    current = next;
-  }
-}
-
-/* ==================================== LIST ==========================================*/
 
 void PrintLine (T_Line * line)
 {
@@ -191,61 +66,11 @@ void PrintLine (T_Line * line)
   }
   printf ("beforeBegin %d, beginEmptyFieldsBelow %d, endColumn %d, endEmptyFieldsBelow %d\n",
           line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow);
-  
 }
-
-
-/* Function draws whole board according to pawns values on each field. */
-void DrawBoard(void)
-{
-  int i = 0, j = 0;
-  /* console cleaning */
-  printf("\e[1;1H\e[2J");
-  for (j = 5; j >= 0; j--)
-  {
-    for (i = 0; i < 7; i++)
-    {
-      switch (board[i][j])
-      {
-        case empty:
-          printf ("[   ]");
-          break;
-        case X:
-          /* Setting font color to green, printing X and setting font color to default */
-          printf ("[ \e[32mX\x1b[0m ]");
-          break;
-        case O:
-          /* Setting font color to red, printing O and setting font color to default */
-          printf ("[ \x1b[31mO\x1b[0m ]");
-          break;
-        case Xblink:
-          /* Setting font color to blinking green, printing X and set font color to default */
-          printf ("[ \e[5m\e[32mX\x1b[0m\e[25m ]");
-          board[i][j] = 1;
-          break;
-        case Oblink:
-          /* Font color to blinking red, printing O and set font color to default */
-          printf ("[ \e[5m\e[31mO\e[0m\e[25m ]");
-          board[i][j] = 2;
-          break;
-        default:
-          printf ("DrawBoard: Incorrect pawn value in board of Pawns\n");
-          exit(0);
-      }
-    }
-    printf ("\n");
-  }
-  printf ("-----------------------------------\n");
-  /* Printing column numbers */
-  for (i = 0; i < 7; i++)
-    printf ("[ %d ]", i);
-  printf ("\n");
-}
-
 
 /*  Function returns number of empty fields below field given as an argument.
     If column or row is incorrect then function return -1 */
-int SearchFieldsBelow(int column, int row)
+static int SearchFieldsBelow(int column, int row)
 {
   int rowIndex;
   int fieldsBelow = 0;
@@ -270,7 +95,7 @@ int SearchFieldsBelow(int column, int row)
      0 if field is empty
      1 if fiels belongs to player
  */
-int FieldState(int col, int row, Pawns player)
+static int FieldState(int col, int row, Pawns player)
 {
   if (col < 0 || col >=7 || row >= 6 || row < 0 )
   {
@@ -296,7 +121,7 @@ int FieldState(int col, int row, Pawns player)
 
 /* This function checks filed before the line if it is already taken by enemy, or doesn't exists.
     NewLine instance is completed accordingly*/
-void CheckPawnBefore(T_Line* newLine, int col, int row, Pawns player)
+static void CheckPawnBefore(T_Line* newLine, int col, int row, Pawns player)
 {
   /*  TODO: line below can be removed if fldState will be get as an argument */
   int fldState = FieldState(col, row, player);
@@ -316,7 +141,7 @@ void CheckPawnBefore(T_Line* newLine, int col, int row, Pawns player)
   return;
 }
 
-void SearchForNextPawnsInLine(T_Line* newLine, int colAdd, int rowAdd)
+static void SearchForNextPawnsInLine(T_Line* newLine, int colAdd, int rowAdd)
 {
   int fldState;
   int c = colAdd;
@@ -346,7 +171,7 @@ void SearchForNextPawnsInLine(T_Line* newLine, int colAdd, int rowAdd)
   return;
 }
 
-T_Line* LineInit(int col, int row, E_Direction dir )
+static T_Line* LineInit(int col, int row, E_Direction dir )
 {
   T_Line* newLine = (T_Line*) malloc(sizeof (T_Line));
   newLine->col = col;
@@ -360,7 +185,7 @@ T_Line* LineInit(int col, int row, E_Direction dir )
 }
 
 
-void SearchLines (T_List* Lines, Pawns player)
+static void SearchLines (T_List* Lines, Pawns player)
 {
   int row, col;
   int fldState = 0;
@@ -445,14 +270,12 @@ void SearchLines (T_List* Lines, Pawns player)
         {
           /* this field is a part of another RIGHT line  */
         }
-        
-        
       }
     }
   }
 }
 
-int PriorityCheck(T_Line* line, int isMyList)
+static int PriorityCheck(T_Line* line, int isMyList)
 {
   /* Szukazanie zakazanych kolumn - czyli takich które po wrzuceniu do nich pionka, pozwolą przeciwnikowi rozbudować linię*/
   //      - przy braku linii szukanie wspolnego miejsca miedzy pojedynczymi pionkami niekoniecznie przylegajacym do już
@@ -501,7 +324,7 @@ int PriorityCheck(T_Line* line, int isMyList)
 
 
 /* function checks for  */
-int Rating (T_List* Lines)
+static int Rating (T_List* Lines)
 {
   int index;
   T_Line* current;
@@ -517,7 +340,7 @@ int Rating (T_List* Lines)
   return index;
 }
 
-char algorithm(void)
+char Algorithm(void)
 {
   T_Line * current;
   T_List* enemyLines = ListInit();
@@ -551,10 +374,4 @@ char algorithm(void)
   ListFree(enemyLines);
   ListFree(myLines);
   return 'q';
-}
-
-int main ()
-{
-  DrawBoard();
-  algorithm();
 }

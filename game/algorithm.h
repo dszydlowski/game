@@ -8,5 +8,6 @@
 #ifndef algorithm_h
 #define algorithm_h
 
+char Algorithm(void);
 
 #endif /* algorithm_h */
