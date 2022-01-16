@@ -9,12 +9,12 @@
 
 Pawns board[7][6] =
 {
-  {X, X, X, O, empty, empty},
-  {X, O, X, X, empty, empty},
-  {X, O, empty, empty, empty, empty},
-  {X, O, X, empty, empty, empty},
-  {O, X, O, empty, empty, empty},
-  {O, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
 };
 
@@ -127,5 +127,18 @@ void SetColumnAsBlinking(int column)
     }
     /*  setting column as blinking by adding enum O = 2 */
     board[column][i] += O;
+  }
+}
+
+/* removed all pawns - game restart  */
+void ClearArea (void)
+{
+  int i = 0, j = 0;
+  for (j = 5; j >= 0; j--)
+  {
+    for (i = 0; i < 7; i++)
+    {
+      board[i][j] = empty;
+    }
   }
 }

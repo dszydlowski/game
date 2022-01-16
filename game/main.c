@@ -128,106 +128,106 @@ int Analize(void)
 
 int main()
 {
-//  Pawns player = X;
-//  int column;
-//  char command;
-//  BoardErrors result;
-//  int gameFinished = 0;
-//  int numberOfPlayers = 0;
-//
-//  while ( 1 )
-//  {
-//    if (numberOfPlayers == 0)
-//    {
-//      printf("\e[1;1H\e[2J"); /* clear screen */
-//      printf("Number of players (1/2): ");
-//      scanf("%d", &numberOfPlayers);
-//      DrawBoard();
-//      printf ("player \e[32mX\x1b[0m : ");
-//    }
-//
-//    if (numberOfPlayers == 1 && player == O)
-//    {
-//      command = 'q';//algorithm();
-//    }
-//    else if (numberOfPlayers == 2)
-//    {
-//      command = getchar();
-//    }
-//    else
-//    {
-//      printf ("main: Number of players incorrect!\n ");
-//      exit(0);
-//    }
-//
-//    if (command >= '0' && command <= '9' && gameFinished == 0)
-//    {
-//      /* converting char number into int number: */
-//      column = command - '0';
-//      result = PutPownOnBoard(column, player);
-//
-//      if (result == columnFull)
-//      {
-//        SetColumnAsBlinking(column);
-//        DrawBoard();
-//        printf("\a\e[31m KOLUMNA PELNA\n\e[0m");
-//      }
-//      else if (result == incorrectColumnNumber)
-//      {
-//        DrawBoard();
-//        printf("\a\e[5m\e[31m!!!\e[25m NIEMA TAKIEJ KOLUMNY \e[5m!!!\n\e[0m\e[25m");
-//      }
-//      else if (result == PawnPutCorrectly)
-//      {
-//        if (Analize() == 1)
-//        {
-//          DrawBoard();
-//          printf("gra skonczona! Zwyciezyl gracz ");
-//          if (player == X)
-//            printf ("\e[32mX\x1b[0m\n");
-//          else
-//            printf ("\x1b[31mO\x1b[0m\n");
-//          printf ("[r]estart [q]uit\n");
-//          gameFinished = 1;
-//          continue;
-//        }
-//        /* switch to another player */
-//        if (player == X)
-//        {
-//          player = O;
-//        }
-//        else
-//        {
-//          player = X;
-//        }
-//        DrawBoard();
-//      }
-//
-//      if (player == X)
-//      {
-//        printf ("player \e[32mX\x1b[0m : ");
-//      }
-//      else
-//      {
-//        printf ("player  \x1b[31mO\x1b[0m : ");
-//      }
-//    }
-//    else if (command == 'q' || command == 'Q')
-//    {
-//      //printf ("Gra przerwana!\n");
-//      break;
-//    }
-//    else if (command == 'r' || command == 'R')
-//    {
-//      ClearArea();
-//      DrawBoard();
-//      gameFinished = 0;
-//      numberOfPlayers = 0;
-//      player = X;
-//    }
-//  }
-//  return 0;
-  DrawBoard();
-  Algorithm();
+  Pawns player = X;
+  int column;
+  char command;
+  BoardErrors result;
+  int gameFinished = 0;
+  int numberOfPlayers = 0;
+
+  while ( 1 )
+  {
+    if (numberOfPlayers == 0)
+    {
+      printf("\e[1;1H\e[2J"); /* clear screen */
+      printf("Number of players (1/2): ");
+      scanf("%d", &numberOfPlayers);
+      DrawBoard();
+      printf ("player \e[32mX\x1b[0m : ");
+    }
+
+    if (numberOfPlayers == 1 && player == O)
+    {
+      command = Algorithm();
+    }
+    else if (numberOfPlayers == 2 || (numberOfPlayers == 1 && player == X) )
+    {
+      command = getchar();
+    }
+    else
+    {
+      printf ("main: Number of players incorrect!\n ");
+      exit(0);
+    }
+
+    if (command >= '0' && command <= '9' && gameFinished == 0)
+    {
+      /* converting char number into int number: */
+      column = command - '0';
+      result = PutPownOnBoard(column, player);
+
+      if (result == columnFull)
+      {
+        SetColumnAsBlinking(column);
+        DrawBoard();
+        printf("\a\e[31m KOLUMNA PELNA\n\e[0m");
+      }
+      else if (result == incorrectColumnNumber)
+      {
+        DrawBoard();
+        printf("\a\e[5m\e[31m!!!\e[25m NIEMA TAKIEJ KOLUMNY \e[5m!!!\n\e[0m\e[25m");
+      }
+      else if (result == PawnPutCorrectly)
+      {
+        if (Analize() == 1)
+        {
+          DrawBoard();
+          printf("gra skonczona! Zwyciezyl gracz ");
+          if (player == X)
+            printf ("\e[32mX\x1b[0m\n");
+          else
+            printf ("\x1b[31mO\x1b[0m\n");
+          printf ("[r]estart [q]uit\n");
+          gameFinished = 1;
+          continue;
+        }
+        /* switch to another player */
+        if (player == X)
+        {
+          player = O;
+        }
+        else
+        {
+          player = X;
+        }
+        DrawBoard();
+      }
+
+      if (player == X)
+      {
+        printf ("player \e[32mX\x1b[0m : ");
+      }
+      else
+      {
+        printf ("player  \x1b[31mO\x1b[0m : ");
+      }
+    }
+    else if (command == 'q' || command == 'Q')
+    {
+      //printf ("Gra przerwana!\n");
+      break;
+    }
+    else if (command == 'r' || command == 'R')
+    {
+      ClearArea();
+      DrawBoard();
+      gameFinished = 0;
+      numberOfPlayers = 0;
+      player = X;
+    }
+  }
+  return 0;
+//  DrawBoard();
+//  Algorithm();
 }
 

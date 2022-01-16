@@ -46,4 +46,7 @@ BoardErrors PutPownOnBoard (int column, Pawns player);
  */
 void SetColumnAsBlinking(int column);
 
+/* removed all pawns - game restart  */
+void ClearArea (void);
+
 #endif /* board_h */

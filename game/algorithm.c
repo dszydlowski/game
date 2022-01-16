@@ -64,8 +64,8 @@ void PrintLine (T_Line * line)
       printf("RIGHT ");
       break;
   }
-  printf ("beforeBegin %d, beginEmptyFieldsBelow %d, endColumn %d, endEmptyFieldsBelow %d\n",
-          line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow);
+  printf ("beforeBegin %d, beginEmptyFieldsBelow %d, endColumn %d, endEmptyFieldsBelow %d, priority: %d\n",
+          line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow, line->priority);
 }
 
 /*  Function returns number of empty fields below field given as an argument.
@@ -282,7 +282,7 @@ static int PriorityCheck(T_Line* line, int isMyList)
   //        postawionych pionków ale w miejscach gdzie potencjalne linie mogą się krzyzowac
   if (line == NULL)
   {
-    return 0;
+    return -1;
   }
 //      - szukanie wlasnej lini z trzema pionkami i czwartym gotowym do obstawienia - priorytet 0
   else if (line->pawnsNumber == 3 && isMyList != 0 && (line->leftEmptyFieldsBelow == 0 || line->rightEmptyFieldsBelow == 0))
@@ -319,25 +319,42 @@ static int PriorityCheck(T_Line* line, int isMyList)
   {
     line->priority = 6;
   }
-  return line->priority;
+  // linia zblokowana z obu stron
+  else if (line->rightCol == -1 && line->leftCol == -1)
+  {
+    line->priority = 101;
+  }
+  else{
+    line->priority = 100;
+  }
+return line->priority;
 }
 
-
-/* function checks for  */
-static int Rating (T_List* Lines)
+/*  This function search forbidden columns - thah column if player put pawn into it then opponent will
+    collect 4 pawns in line. Argument takes list of enemy lines. Returns forbidden columns bitcoded. */
+int ForbiddenColumns (T_List* list)
 {
-  int index;
+  int i;
+  int forbidden = 0;
   T_Line* current;
-  
-  for (index = 0; 1; index++)
+  for (i = 0; 1; i++)
   {
-    current = ListLine(Lines, index);
+    current = ListLine(list, i);
     if (current == NULL)
       break;
-    PrintLine(current);
+    if (current->pawnsNumber >= 3)
+    {
+      if (current->leftCol != -1 && current->leftEmptyFieldsBelow == 1)
+      {
+        forbidden |= (1 << current->leftCol);
+      }
+      if (current->rightCol != -1 && current->leftEmptyFieldsBelow == 1)
+      {
+        forbidden |= (1 << current->rightCol);
+      }
+    }
   }
-  
-  return index;
+  return forbidden;
 }
 
 char Algorithm(void)
@@ -345,12 +362,19 @@ char Algorithm(void)
   T_Line * current;
   T_List* enemyLines = ListInit();
   T_List* myLines = ListInit();
+  int returnColumn = -1;
+  int forbiddenColumns = 0;
   int i = 0;
+  int currentPriority = -1;
+  int lowestPriority = 1000;
+  int lowestIndex = -1;
+  int lowestIndexMyList = -1;
   /* szukanie lini przeciwnika */
   SearchLines(enemyLines, X);
   /* szukanie wlasnych linii */
   SearchLines(myLines, O);
   
+  /* przeniesc do to osobnej funkcji, ktora zwroci numer kolumny */
   printf ("Enemy Lines:\n");
   for (i = 0; 1; i++)
   {
@@ -358,6 +382,13 @@ char Algorithm(void)
     if (current == NULL)
       break;
     PrintLine(current);
+    currentPriority = PriorityCheck(current, 0);
+    if (currentPriority < lowestPriority)
+    {
+      lowestPriority = currentPriority;
+      lowestIndex = i;
+      lowestIndexMyList = 0;
+    }
   }
   
   printf ("My Lines:\n");
@@ -367,11 +398,40 @@ char Algorithm(void)
     if (current == NULL)
       break;
     PrintLine(current);
+    currentPriority = PriorityCheck(current, 1);
+    if (currentPriority < lowestPriority)
+    {
+      lowestPriority = currentPriority;
+      lowestIndex = i;
+      lowestIndexMyList = 1;
+    }
   }
   
-
-
+  forbiddenColumns = ForbiddenColumns(enemyLines);
+  if (forbiddenColumns == 127)
+  {
+    printf ("error: all collumns forbidden, game quit\n");
+    return 'q';
+  }
+  
+  if (lowestPriority < 100)
+  {
+    if (lowestIndexMyList == 0)
+      current = ListLine(enemyLines, lowestIndex);
+    else
+      current = ListLine(myLines, lowestIndex);
+    
+    /* search for column */
+                         
+  }
+  else
+  {
+    /* random column and check if it is not forbidden column */
+    do{
+      returnColumn = rand() % 7;
+    }while ((forbiddenColumns >> returnColumn) && 0x00000001);
+  }
   ListFree(enemyLines);
   ListFree(myLines);
-  return 'q';
+  return (char) (returnColumn+48);
 }
