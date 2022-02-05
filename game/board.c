@@ -9,12 +9,12 @@
 
 Pawns board[7][6] =
 {
+  {O, empty, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
+  {X, X, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
-  {empty, empty, empty, empty, empty, empty},
+  {X, empty, empty, empty, empty, empty},
+  {O, O, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
 };
 
@@ -24,7 +24,9 @@ void DrawBoard(void)
 {
   int i = 0, j = 0;
   /* console cleaning */
+#ifndef DEBUG
   printf("\e[1;1H\e[2J");
+#endif
   for (j = 5; j >= 0; j--)
   {
     for (i = 0; i < 7; i++)
@@ -36,20 +38,36 @@ void DrawBoard(void)
           break;
         case X:
           /* Setting font color to green, printing X and setting font color to default */
+#ifndef DEBUG
           printf ("[ \e[32mX\x1b[0m ]");
+#else
+          printf ("[ X ]");
+#endif
           break;
         case O:
           /* Setting font color to red, printing O and setting font color to default */
+#ifndef DEBUG
           printf ("[ \x1b[31mO\x1b[0m ]");
+#else
+          printf ("[ O ]");
+#endif
           break;
         case Xblink:
           /* Setting font color to blinking green, printing X and set font color to default */
+#ifndef DEBUG
           printf ("[ \e[5m\e[32mX\x1b[0m\e[25m ]");
+#else
+          printf ("[ X ]");
+#endif
           board[i][j] = 1;
           break;
         case Oblink:
           /* Font color to blinking red, printing O and set font color to default */
+#ifndef DEBUG
           printf ("[ \e[5m\e[31mO\e[0m\e[25m ]");
+#else
+          printf ("[ O ]");
+#endif
           board[i][j] = 2;
           break;
         default:

@@ -324,6 +324,7 @@ static int PriorityCheck(T_Line* line, int isMyList)
   {
     line->priority = 101;
   }
+  /* wszystkie inne przypadki */
   else{
     line->priority = 100;
   }
@@ -365,16 +366,16 @@ char Algorithm(void)
   int returnColumn = -1;
   int forbiddenColumns = 0;
   int i = 0;
-  int currentPriority = -1;
+  int currentPriority = 1000;
   int lowestPriority = 1000;
-  int lowestIndex = -1;
-  int lowestIndexMyList = -1;
+  int lowestIndex = 1000;
+  int lowestIndexMyList = 1000;
   /* szukanie lini przeciwnika */
   SearchLines(enemyLines, X);
   /* szukanie wlasnych linii */
   SearchLines(myLines, O);
   
-  /* przeniesc do to osobnej funkcji, ktora zwroci numer kolumny */
+  /* TODO: przeniesc do to osobnej funkcji, ktora zwroci numer kolumny */
   printf ("Enemy Lines:\n");
   for (i = 0; 1; i++)
   {
@@ -422,7 +423,25 @@ char Algorithm(void)
       current = ListLine(myLines, lowestIndex);
     
     /* search for column */
-                         
+    if (current->leftEmptyFieldsBelow != -1 && current->rightEmptyFieldsBelow != -1)
+    {
+      if (current->leftEmptyFieldsBelow <= current->rightEmptyFieldsBelow)
+      {
+        returnColumn = current->leftCol;
+      }
+      else
+      {
+        returnColumn = current->rightCol;
+      }
+    }
+    else if (current->leftEmptyFieldsBelow == -1)
+    {
+      returnColumn = current->rightCol;
+    }
+    else
+    {
+      returnColumn = current->leftCol;
+    }
   }
   else
   {
