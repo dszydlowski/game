@@ -134,6 +134,8 @@ int main()
   BoardErrors result;
   int gameFinished = 0;
   int numberOfPlayers = 0;
+  
+  srand((unsigned int) time(NULL));
 
   while ( 1 )
   {
@@ -149,10 +151,13 @@ int main()
     if (numberOfPlayers == 1 && player == O)
     {
       command = Algorithm();
+      sleep(2);
     }
     else if (numberOfPlayers == 2 || (numberOfPlayers == 1 && player == X) )
     {
       command = getchar();
+      if (command == '\n')
+        command = getchar();
     }
     else
     {
@@ -189,6 +194,7 @@ int main()
             printf ("\x1b[31mO\x1b[0m\n");
           printf ("[r]estart [q]uit\n");
           gameFinished = 1;
+          player = X;
           continue;
         }
         /* switch to another player */

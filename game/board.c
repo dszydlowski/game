@@ -9,12 +9,12 @@
 
 Pawns board[7][6] =
 {
-  {O, empty, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
-  {X, X, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
-  {X, empty, empty, empty, empty, empty},
-  {O, O, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
+  {empty, empty, empty, empty, empty, empty},
   {empty, empty, empty, empty, empty, empty},
 };
 

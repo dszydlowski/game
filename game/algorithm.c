@@ -48,6 +48,7 @@ typedef struct{
 
 void PrintLine (T_Line * line)
 {
+#ifdef DEBUG
   printf ("col:%d, row:%d, pawns:%d direction: ", line->col, line->row, line->pawnsNumber);
   switch (line->direction)
   {
@@ -66,6 +67,7 @@ void PrintLine (T_Line * line)
   }
   printf ("beforeBegin %d, beginEmptyFieldsBelow %d, endColumn %d, endEmptyFieldsBelow %d, priority: %d\n",
           line->leftCol, line->leftEmptyFieldsBelow, line->rightCol, line->rightEmptyFieldsBelow, line->priority);
+#endif
 }
 
 /*  Function returns number of empty fields below field given as an argument.
@@ -376,7 +378,9 @@ char Algorithm(void)
   SearchLines(myLines, O);
   
   /* TODO: przeniesc do to osobnej funkcji, ktora zwroci numer kolumny */
+#ifdef DEBUG
   printf ("Enemy Lines:\n");
+#endif
   for (i = 0; 1; i++)
   {
     current = ListLine(enemyLines, i);
@@ -391,8 +395,9 @@ char Algorithm(void)
       lowestIndexMyList = 0;
     }
   }
-  
+#ifdef DEBUG
   printf ("My Lines:\n");
+#endif
   for (i = 0; 1; i++)
   {
     current = ListLine(myLines, i);
